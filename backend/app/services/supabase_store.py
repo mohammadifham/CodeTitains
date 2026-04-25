@@ -147,6 +147,27 @@ class SupabaseStore:
         return await self._insert(self.allocations_table_name, payload)
 
 
+def _is_placeholder_value(value: str) -> bool:
+    lower = value.strip().lower()
+    return (
+        not lower
+        or "your-" in lower
+        or "your_" in lower
+        or "example" in lower
+        or "changeme" in lower
+        or "<" in lower
+        or ">" in lower
+    )
+
+
+def _is_valid_supabase_url(url: str) -> bool:
+    return bool(url) and url.startswith("http") and not _is_placeholder_value(url)
+
+
+def _is_valid_service_role_key(key: str) -> bool:
+    return bool(key.strip()) and not _is_placeholder_value(key)
+
+
 def get_supabase_store() -> SupabaseStore | None:
     url = os.getenv("SUPABASE_URL", "").strip()
     service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
@@ -155,7 +176,7 @@ def get_supabase_store() -> SupabaseStore | None:
     requests_table_name = os.getenv("SUPABASE_REQUESTS_TABLE", "requests").strip() or "requests"
     resources_table_name = os.getenv("SUPABASE_RESOURCES_TABLE", "resources").strip() or "resources"
     allocations_table_name = os.getenv("SUPABASE_ALLOCATIONS_TABLE", "allocations").strip() or "allocations"
-    if not url or not service_role_key:
+    if not _is_valid_supabase_url(url) or not _is_valid_service_role_key(service_role_key):
         return None
     return SupabaseStore(
         url=url,

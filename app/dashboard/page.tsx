@@ -3,20 +3,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/app/components/Navbar';
+import Chatbot from '@/app/components/Chatbot';
+import LiveMap from '@/app/components/LiveMap';
 import { useAuth } from '@/lib/auth-context';
-import { AlertTriangle, Bot, MapPinned, Package, Plus, SendHorizontal } from 'lucide-react';
+import { AlertTriangle, Bot, MapPinned, Package, Plus } from 'lucide-react';
 import styles from './dashboard.module.css';
-
-interface Message {
-  id: number;
-  sender: 'bot' | 'user';
-  text: string;
-}
-
-interface ChatHistoryItem {
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 interface IncidentRecord {
   id: number;
@@ -56,6 +47,13 @@ interface AllocationRecord {
   created_at: string;
 }
 
+const getCoordinatesFromLabel = (value: string): [number, number] => {
+  const hash = [...value].reduce((acc, char) => acc * 31 + char.charCodeAt(0), 0);
+  const lat = 40.68 + ((Math.abs(hash) % 140) / 200);
+  const lng = -74.02 + (((Math.abs(hash) >> 4) % 140) / 200);
+  return [lat, lng];
+};
+
 interface DashboardStats {
   active_incidents: number;
   open_requests: number;
@@ -77,18 +75,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [chatSessionId, setChatSessionId] = useState<string>('');
-  const [chatHistoryLoadedSession, setChatHistoryLoadedSession] = useState('');
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [dataError, setDataError] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      sender: 'bot',
-      text: 'Hello Commander. I can help with dispatch priorities, resource balancing, and immediate response actions.',
-    },
-  ]);
   const [stats, setStats] = useState<DashboardStats>({
     active_incidents: 0,
     open_requests: 0,
@@ -99,7 +87,6 @@ export default function DashboardPage() {
   const [requests, setRequests] = useState<RequestRecord[]>([]);
   const [resources, setResources] = useState<ResourceRecord[]>([]);
   const [allocations, setAllocations] = useState<AllocationRecord[]>([]);
-  const [chatInput, setChatInput] = useState('');
   const [allocation, setAllocation] = useState({ resourceId: '', requestId: '', units: 1 });
 
   const requestMap = useMemo(
@@ -137,13 +124,6 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    const existingSessionId = window.localStorage.getItem('drs_chat_session_id') || '';
-    if (existingSessionId) {
-      setChatSessionId(existingSessionId);
-    }
-  }, []);
-
-  useEffect(() => {
     if (!loading && !user) {
       router.replace('/login');
     }
@@ -157,7 +137,9 @@ export default function DashboardPage() {
       setDataError('');
       const response = await fetch(`${apiBase}/api/dashboard-data`);
       if (!response.ok) {
-        throw new Error('Failed to load dashboard data.');
+        const errorBody = await response.json().catch(() => null);
+        const message = errorBody?.detail || 'Failed to load dashboard data.';
+        throw new Error(message);
       }
 
       const payload = (await response.json()) as DashboardDataResponse;
@@ -166,8 +148,9 @@ export default function DashboardPage() {
       setRequests(payload.requests);
       setResources(payload.resources);
       setAllocations(payload.allocations);
-    } catch {
-      setDataError('Could not load live dashboard data. Check backend and Supabase tables.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Could not load live dashboard data. Check backend and Supabase tables.';
+      setDataError(message);
     } finally {
       setIsLoadingData(false);
     }
@@ -177,44 +160,6 @@ export default function DashboardPage() {
     void loadDashboardData();
   }, [user]);
 
-  useEffect(() => {
-    const loadChatHistory = async () => {
-      if (!chatSessionId || chatHistoryLoadedSession === chatSessionId) return;
-
-      try {
-        const response = await fetch(
-          `${apiBase}/api/chat/history?session_id=${encodeURIComponent(chatSessionId)}`,
-        );
-        if (!response.ok) {
-          return;
-        }
-
-        const payload = (await response.json()) as {
-          session_id: string;
-          messages: ChatHistoryItem[];
-        };
-
-        if (!payload.messages.length) {
-          setChatHistoryLoadedSession(chatSessionId);
-          return;
-        }
-
-        setMessages(
-          payload.messages.map((item, index) => ({
-            id: Date.now() + index,
-            sender: item.role === 'assistant' ? 'bot' : 'user',
-            text: item.content,
-          })),
-        );
-        setChatHistoryLoadedSession(chatSessionId);
-      } catch {
-        setChatHistoryLoadedSession(chatSessionId);
-      }
-    };
-
-    void loadChatHistory();
-  }, [chatHistoryLoadedSession, chatSessionId]);
-
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-slate-950 text-cyan-300 grid place-items-center">
@@ -222,68 +167,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  const handleSend = async () => {
-    if (isSending) return;
-    const input = chatInput.trim();
-    if (!input) return;
-
-    const historyPayload: ChatHistoryItem[] = messages.slice(-12).map((msg) => ({
-      role: msg.sender === 'bot' ? 'assistant' : 'user',
-      content: msg.text,
-    }));
-
-    const userMessage: Message = {
-      id: Date.now(),
-      sender: 'user',
-      text: input,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setChatInput('');
-
-    try {
-      setIsSending(true);
-      const response = await fetch(`${apiBase}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input, history: historyPayload, session_id: chatSessionId || undefined }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Backend chat request failed.');
-      }
-
-      const data = (await response.json()) as { reply?: string; session_id?: string };
-      const botReply = data.reply?.trim() || 'No response received from assistant.';
-      const receivedSessionId = data.session_id?.trim();
-
-      if (receivedSessionId && receivedSessionId !== chatSessionId) {
-        setChatSessionId(receivedSessionId);
-        window.localStorage.setItem('drs_chat_session_id', receivedSessionId);
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'bot',
-          text: botReply,
-        },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: 'bot',
-          text: 'I could not reach the AI backend. Please verify the backend server and API key setup.',
-        },
-      ]);
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   const handleAllocate = () => {
     const createAllocation = async () => {
@@ -347,8 +230,8 @@ export default function DashboardPage() {
             ))}
           </section>
 
-          {dataError ? <p className={styles.subtitle}>{dataError}</p> : null}
-          {isLoadingData ? <p className={styles.subtitle}>Loading live dashboard data...</p> : null}
+          {dataError ? <div className={styles.alertCard}>{dataError}</div> : null}
+          {isLoadingData ? <div className={styles.infoCard}>Loading live dashboard data...</div> : null}
 
           <section className={styles.grid}>
             <article className={styles.card}>
@@ -360,25 +243,25 @@ export default function DashboardPage() {
                 <MapPinned size={16} color="#85f8ff" />
               </div>
               <div className={styles.mapBody}>
-                <div className={styles.mapPlaceholder}>
-                  <span className={styles.mapTag}>
-                    <AlertTriangle size={13} /> {incidents.length} active zones in feed
-                  </span>
-                  <div className={styles.zoneList}>
-                    {incidents.map((incident) => (
-                      <div className={styles.zoneItem} key={incident.id}>
-                        <p className={styles.zoneTop}>
-                          <span>{incident.title}</span>
-                          <span className={incident.severity === 'Critical' ? styles.badgeHigh : styles.badgeMed}>
-                            {incident.severity}
-                          </span>
-                        </p>
-                        <p className={styles.zoneDesc}>{incident.description} ({incident.location})</p>
-                      </div>
-                    ))}
-                    {!incidents.length ? <p className={styles.zoneDesc}>No incidents available in database.</p> : null}
-                  </div>
-                </div>
+                <LiveMap
+                  incidents={incidents}
+                  resources={resources}
+                  route={
+                    incidents.length && resources.length
+                      ? {
+                          name: 'Priority Response',
+                          status: incidents.some((incident) => incident.severity === 'Critical' || incident.severity === 'High')
+                            ? 'Blocked'
+                            : 'Safe',
+                          eta: '18 min',
+                          coords: [
+                            getCoordinatesFromLabel(resources[0].name),
+                            getCoordinatesFromLabel(incidents[0].location),
+                          ],
+                        }
+                      : undefined
+                  }
+                />
               </div>
             </article>
 
@@ -391,13 +274,16 @@ export default function DashboardPage() {
                 <Package size={16} color="#85f8ff" />
               </div>
               <div className={styles.sideBody}>
-                {requests.map((req) => (
-                  <div className={styles.feedItem} key={req.id}>
-                    <p className={styles.feedTitle}>{req.title}</p>
-                    <p className={styles.feedMeta}>{req.priority} priority • {req.status}</p>
-                  </div>
-                ))}
-                {!requests.length ? <p className={styles.feedMeta}>No request data found in database.</p> : null}
+                {requests.length ? (
+                  requests.map((req) => (
+                    <div className={styles.feedItem} key={req.id}>
+                      <p className={styles.feedTitle}>{req.title}</p>
+                      <p className={styles.feedMeta}>{req.priority} priority • {req.status}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className={styles.feedMeta}>No request data found in database.</p>
+                )}
               </div>
             </article>
           </section>
@@ -478,45 +364,7 @@ export default function DashboardPage() {
 
             {chatOpen && (
               <aside className={styles.chatPopup}>
-                <div className={styles.chatHeader}>
-                  <div className={styles.chatHeaderLeft}>
-                    <div className={styles.chatBotIcon}>
-                      <Bot size={15} />
-                    </div>
-                    <div>
-                      <h3 className={styles.chatTitle}>AI Command Assistant</h3>
-                      <p className={styles.chatStatus}>Online</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.chatWrap}>
-                  <div className={styles.chatBody}>
-                    {messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`${styles.msg} ${msg.sender === 'bot' ? styles.msgBot : styles.msgUser}`}
-                      >
-                        {msg.text}
-                      </div>
-                    ))}
-                  </div>
-                  <div className={styles.chatInputRow}>
-                    <input
-                      className={styles.input}
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Ask a question..."
-                      disabled={isSending}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSend();
-                      }}
-                    />
-                    <button className={styles.sendBtn} onClick={handleSend} type="button" disabled={isSending}>
-                      <SendHorizontal size={15} />
-                    </button>
-                  </div>
-                </div>
+                <Chatbot />
               </aside>
             )}
           </div>

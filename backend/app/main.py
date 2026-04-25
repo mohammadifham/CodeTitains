@@ -97,9 +97,27 @@ def _require_store():
     return store
 
 
+def _default_dashboard_data() -> DashboardDataResponse:
+    return DashboardDataResponse(
+        stats=DashboardStats(
+            active_incidents=0,
+            open_requests=0,
+            response_sla="0%",
+            teams_deployed="0/0",
+        ),
+        incidents=[],
+        requests=[],
+        resources=[],
+        allocations=[],
+    )
+
+
 @app.get("/api/dashboard-data", response_model=DashboardDataResponse)
 async def dashboard_data() -> DashboardDataResponse:
-    store = _require_store()
+    store = get_supabase_store()
+    if store is None:
+        return _default_dashboard_data()
+
     try:
         incidents = await store.list_incidents()
         requests = await store.list_requests()
@@ -235,5 +253,11 @@ async def chat(payload: ChatRequest) -> ChatResponse:
         except Exception:
             # Keep chat availability even if persistence is misconfigured.
             pass
+    else:
+        reply = (
+            f"{reply}\n\n"
+            "NOTE: Supabase persistence is not configured. "
+            "Dashboard updates will not be saved until SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set."
+        )
 
     return ChatResponse(reply=reply, session_id=session_id)
