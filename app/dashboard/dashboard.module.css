@@ -1,0 +1,477 @@
+.page {
+  min-height: calc(100vh - 80px);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(0, 214, 255, 0.16), transparent 32%),
+    radial-gradient(circle at 85% 0%, rgba(96, 72, 255, 0.16), transparent 36%),
+    linear-gradient(135deg, #050914 0%, #091532 55%, #080d18 100%);
+  color: #e7eef9;
+  padding: 34px 22px 52px;
+}
+
+.container {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  color: #9eb0cc;
+  font-size: 15px;
+}
+
+.newBtn {
+  border: 1px solid rgba(111, 238, 255, 0.36);
+  background: linear-gradient(135deg, rgba(0, 194, 255, 0.38), rgba(101, 93, 255, 0.34));
+  color: #fff;
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 149, 255, 0.24);
+}
+
+.secondaryBtn {
+  border: 1px solid rgba(111, 238, 255, 0.22);
+  background: rgba(9, 21, 48, 0.84);
+  color: #d8f8ff;
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 149, 255, 0.12);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  border: 1px solid rgba(110, 176, 255, 0.25);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(7, 15, 35, 0.78);
+}
+
+.statValue {
+  margin: 0;
+  font-size: clamp(24px, 2vw, 32px);
+  font-weight: 800;
+  color: #f7fbff;
+}
+
+.statLabel {
+  margin: 4px 0 0;
+  color: #8ea3c3;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr;
+  gap: 18px;
+}
+
+.card {
+  border: 1px solid rgba(106, 176, 255, 0.24);
+  border-radius: 16px;
+  background: rgba(5, 14, 34, 0.86);
+  box-shadow: 0 20px 36px rgba(3, 8, 22, 0.45);
+}
+
+.cardHead {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(106, 176, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #dff4ff;
+}
+
+.cardSub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #8ea3c3;
+}
+
+.mapBody {
+  padding: 16px;
+}
+
+.mapPlaceholder {
+  border: 1px solid rgba(104, 174, 255, 0.24);
+  border-radius: 14px;
+  min-height: 320px;
+  background:
+    linear-gradient(145deg, rgba(9, 40, 74, 0.55), rgba(8, 16, 36, 0.55)),
+    radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.2), transparent 26%);
+  padding: 18px;
+}
+
+.mapTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(110, 234, 255, 0.35);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #b9f6ff;
+  background: rgba(2, 159, 198, 0.16);
+}
+
+.zoneList {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.zoneItem {
+  border: 1px solid rgba(115, 182, 255, 0.2);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(6, 16, 36, 0.76);
+}
+
+.zoneTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.zoneDesc {
+  margin: 0;
+  font-size: 13px;
+  color: #93a8c8;
+}
+
+.badgeHigh {
+  color: #ff7a7a;
+}
+
+.badgeMed {
+  color: #ffd17a;
+}
+
+.sideBody {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  max-height: 430px;
+  overflow: auto;
+}
+
+.feedItem {
+  border: 1px solid rgba(111, 180, 255, 0.2);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(9, 21, 48, 0.84);
+}
+
+.feedTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.feedMeta {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #8ea3c4;
+}
+
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.formBody {
+  padding: 14px;
+}
+
+.inputGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.input,
+.select {
+  width: 100%;
+  border: 1px solid rgba(104, 177, 255, 0.24);
+  border-radius: 10px;
+  background: rgba(5, 14, 34, 0.9);
+  color: #e9f2ff;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: rgba(118, 238, 255, 0.68);
+}
+
+.allocateBtn {
+  margin-top: 10px;
+  width: 100%;
+  border: 1px solid rgba(124, 241, 255, 0.3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(0, 194, 255, 0.32), rgba(87, 92, 255, 0.28));
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.allocList {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.allocItem {
+  border: 1px solid rgba(113, 180, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(8, 20, 44, 0.78);
+  padding: 9px;
+  font-size: 13px;
+  color: #bbcbdf;
+}
+
+.chatWrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.chatBody {
+  padding: 10px 10px 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.msg {
+  width: fit-content;
+  max-width: 86%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.34;
+}
+
+.msgBot {
+  align-self: flex-start;
+  background: rgba(13, 112, 168, 0.3);
+  border: 1px solid rgba(116, 212, 255, 0.32);
+  border-bottom-left-radius: 6px;
+}
+
+.msgUser {
+  align-self: flex-end;
+  background: rgba(80, 75, 170, 0.4);
+  border: 1px solid rgba(162, 157, 255, 0.32);
+  border-bottom-right-radius: 6px;
+}
+
+.chatInputRow {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid rgba(105, 176, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.sendBtn {
+  border: 1px solid rgba(124, 241, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(0, 194, 255, 0.2);
+  color: #d8f8ff;
+  width: 40px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chatPopup {
+  position: fixed;
+  left: 22px;
+  bottom: 88px;
+  z-index: 80;
+  width: min(300px, calc(100vw - 24px));
+  height: 310px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(132, 186, 255, 0.26);
+  background: linear-gradient(145deg, rgba(26, 36, 58, 0.95), rgba(9, 13, 29, 0.95));
+  box-shadow: 0 30px 60px rgba(2, 8, 23, 0.58);
+  display: flex;
+  flex-direction: column;
+}
+
+.chatLauncherWrap {
+  position: fixed;
+  left: 22px;
+  bottom: 22px;
+  z-index: 81;
+}
+
+.chatLauncher {
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  border: 1px solid rgba(132, 222, 255, 0.34);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #e8f8ff;
+  background: linear-gradient(135deg, rgba(66, 149, 255, 0.96), rgba(67, 104, 255, 0.96));
+  box-shadow: 0 14px 28px rgba(40, 117, 255, 0.38);
+  cursor: pointer;
+}
+
+.chatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid rgba(134, 178, 255, 0.18);
+  flex-shrink: 0;
+}
+
+.chatHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chatBotIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #c8ecff;
+  background: rgba(81, 130, 255, 0.3);
+}
+
+.chatTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #eaf3ff;
+}
+
+.chatStatus {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #4be18f;
+}
+
+.chatClose {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid,
+  .bottomGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px 12px 24px;
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .newBtn {
+    width: 100%;
+  }
+
+  .secondaryBtn {
+    width: 100%;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .chatPopup {
+    left: 12px;
+    bottom: 84px;
+    height: 300px;
+    width: min(290px, calc(100vw - 24px));
+  }
+
+  .chatLauncherWrap {
+    left: 12px;
+    bottom: 12px;
+  }
+
+  .chatLauncher {
+    width: 54px;
+    height: 54px;
+  }
+}
