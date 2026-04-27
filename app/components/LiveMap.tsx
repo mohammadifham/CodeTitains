@@ -1,7 +1,7 @@
 'use client';
 
 import 'leaflet/dist/leaflet.css';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Polyline } from 'react-leaflet';
 import type { LatLngExpression } from 'leaflet';
 
@@ -32,6 +32,7 @@ interface LiveMapProps {
   incidents: IncidentRecord[];
   resources: ResourceRecord[];
   route?: RouteLine;
+  heightClassName?: string;
 }
 
 const getCoordinatesFromLabel = (value: string): [number, number] => {
@@ -65,17 +66,16 @@ const getResourceColor = (status: ResourceRecord['status']) => {
   }
 };
 
-function LiveMap({ incidents, resources, route }: LiveMapProps) {
-  const nasaApiKey = process.env.NEXT_PUBLIC_NASA_API_KEY;
-  const tileUrl = nasaApiKey
-    ? `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${new Date()
-        .toISOString()
-        .split('T')[0]}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`
-    : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+function LiveMap({ incidents, resources, route, heightClassName = 'h-[440px]' }: LiveMapProps) {
+  const [useFallbackNasaLayer, setUseFallbackNasaLayer] = useState(false);
 
-  const tileAttribution = nasaApiKey
-    ? 'Tiles &copy; NASA GIBS, NASA Earth Observations'
-    : 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
+  const primaryNasaTileUrl =
+    'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg';
+  const fallbackNasaTileUrl =
+    'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg';
+
+  const tileUrl = useFallbackNasaLayer ? fallbackNasaTileUrl : primaryNasaTileUrl;
+  const tileAttribution = 'Tiles &copy; NASA GIBS, NASA Earth Observations';
 
   const incidentPoints = useMemo(
     () =>
@@ -110,9 +110,19 @@ function LiveMap({ incidents, resources, route }: LiveMapProps) {
   }, [incidentPoints, resourcePoints, route]);
 
   return (
-    <div className="w-full h-[520px] overflow-hidden rounded-3xl border border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.08)]">
-      <MapContainer center={center} zoom={12} scrollWheelZoom style={{ width: '100%', height: '100%' }}>
-        <TileLayer attribution={tileAttribution} url={tileUrl} />
+    <div className={`w-full ${heightClassName} overflow-hidden rounded-3xl border border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.08)]`}>
+      <MapContainer center={center} zoom={7} scrollWheelZoom style={{ width: '100%', height: '100%' }}>
+        <TileLayer
+          attribution={tileAttribution}
+          url={tileUrl}
+          maxNativeZoom={9}
+          maxZoom={13}
+          eventHandlers={{
+            tileerror: () => {
+              setUseFallbackNasaLayer(true);
+            },
+          }}
+        />
         {incidentPoints.map((incident) => (
           <CircleMarker
             key={`incident-${incident.id}`}

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Send, MessageCircle } from 'lucide-react';
+import { Radio, Send } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatMessage {
   id: string;
@@ -25,7 +26,9 @@ export const Chatbot: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState('');
+  const [sessionId, setSessionId] = useState(() =>
+    typeof window !== 'undefined' ? window.localStorage.getItem('drs_chat_session_id') || '' : '',
+  );
   const [historyLoadedSession, setHistoryLoadedSession] = useState('');
   const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -33,13 +36,6 @@ export const Chatbot: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  useEffect(() => {
-    const storedSessionId = window.localStorage.getItem('drs_chat_session_id') || '';
-    if (storedSessionId) {
-      setSessionId(storedSessionId);
-    }
-  }, []);
 
   useEffect(() => {
     if (!user || !sessionId || historyLoadedSession === sessionId) return;
@@ -158,82 +154,88 @@ export const Chatbot: React.FC = () => {
   );
 
   if (loading) {
-    return <div className="neon-card p-4">Loading...</div>;
+    return <div className="neon-card p-4 text-sm text-cyan-100">Loading command assistant...</div>;
   }
 
   if (!user) {
     return (
       <div className="neon-card p-4">
-        <p className="text-sm text-cyan-200">Please sign in to use the AI chatbot.</p>
+        <p className="text-sm text-cyan-200">Please sign in to use the operations assistant.</p>
       </div>
     );
   }
 
   return (
-    <div className="neon-card h-full flex flex-col">
-      <div className="flex items-center gap-2 mb-4 pb-4 border-b" style={{ borderBottomColor: 'rgba(0, 255, 255, 0.2)' }}>
-        <MessageCircle size={20} className="text-purple-400" />
-        <div>
-          <h2 className="text-lg font-bold text-cyan-400">AI Assistant</h2>
-          <p className="text-xs text-cyan-200">Live backend conversation powered by Mistral.</p>
+    <div className="h-full flex flex-col p-4 bg-slate-950/80 backdrop-blur-2xl">
+      <div className="mb-4 flex items-center justify-between border-b border-cyan-500/30 pb-3 shadow-[0_4px_20px_-10px_rgba(34,211,238,0.3)]">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-xl border border-cyan-400/50 bg-cyan-500/20 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+            <Radio size={20} className="animate-pulse" />
+          </span>
+          <div>
+            <h2 className="text-base font-bold uppercase tracking-[0.2em] text-cyan-50">Ops Assistant</h2>
+            <p className="text-[10px] uppercase tracking-wider text-cyan-400/80 font-[family-name:var(--font-geist-mono)]">Encrypted Channel Open</p>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className="max-w-xs px-4 py-2 rounded-lg text-sm"
-              style={{
-                backgroundColor: message.sender === 'user' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(0, 255, 255, 0.2)',
-                color: message.sender === 'user' ? '#bfdbfe' : '#cffafe',
-                borderWidth: '1px',
-                borderColor: message.sender === 'user' ? 'rgba(59, 130, 246, 0.5)' : 'rgba(0, 255, 255, 0.4)',
-              }}
+      <div className="mb-4 flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+        <AnimatePresence initial={false}>
+          {messages.map((message) => (
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {message.text}
-              <div className="text-xs mt-1" style={{ opacity: 0.7 }}>
-                {message.timestamp.toLocaleTimeString()}
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-md backdrop-blur-sm ${
+                  message.sender === 'user'
+                    ? 'border border-blue-500/40 bg-blue-600/20 text-blue-50 rounded-br-sm'
+                    : 'border border-cyan-500/40 bg-cyan-600/10 text-cyan-50 rounded-bl-sm shadow-[0_0_15px_rgba(34,211,238,0.1)]'
+                }`}
+              >
+                {message.text}
+                <div className={`mt-1.5 text-[10px] font-[family-name:var(--font-geist-mono)] ${message.sender === 'user' ? 'text-blue-300/70 text-right' : 'text-cyan-400/70'}`}>
+                  {message.timestamp.toLocaleTimeString()}
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            </motion.div>
+          ))}
+        </AnimatePresence>
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="px-4 py-2 rounded-lg border" style={{ backgroundColor: 'rgba(0, 255, 255, 0.2)', borderColor: 'rgba(0, 255, 255, 0.4)' }}>
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-100"></div>
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse delay-200"></div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+            <div className="rounded-2xl rounded-bl-sm border border-cyan-500/40 bg-cyan-600/10 px-5 py-4 shadow-[0_0_15px_rgba(34,211,238,0.1)]">
+              <div className="flex gap-1.5">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce delay-100"></div>
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce delay-200"></div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {error ? <p className="text-sm text-red-300 mb-3">{error}</p> : null}
+      {error ? <p className="mb-3 text-xs text-rose-400 bg-rose-500/10 p-2 rounded border border-rose-500/20">{error}</p> : null}
 
-      <div className="flex gap-2 pt-4 border-t" style={{ borderTopColor: 'rgba(0, 255, 255, 0.2)' }}>
+      <div className="flex gap-2 border-t border-cyan-500/30 pt-4 relative">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask me something..."
-          className="neon-input text-sm flex-1"
+          placeholder="Transmit message..."
+          className="neon-input flex-1 text-sm bg-slate-900/80 rounded-xl"
           disabled={isLoading}
         />
         <button
           onClick={() => void handleSendMessage()}
           disabled={isLoading || !input.trim()}
-          className="neon-button p-2"
+          className="neon-button-primary rounded-xl px-4 py-2 flex items-center justify-center transition-transform active:scale-95"
           style={{ opacity: isLoading || !input.trim() ? 0.5 : 1 }}
         >
-          <Send size={18} />
+          <Send size={18} className={input.trim() ? 'animate-pulse' : ''} />
         </button>
       </div>
     </div>

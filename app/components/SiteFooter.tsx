@@ -9,55 +9,54 @@ const footerLinks = [
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-cyan-500/15 bg-slate-950/95">
-      <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr_0.8fr] lg:items-start">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300 shadow-[0_0_18px_rgba(0,255,255,0.16)]">
-                <Activity size={18} />
+    <footer className="border-t border-cyan-500/15 bg-slate-950/95 mt-12">
+      <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          
+          <div className="lg:col-span-1">
+            <Link href="/" className="flex items-center gap-2 mb-4 w-fit">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                <Activity size={20} />
               </span>
-              <div>
-                <p className="text-base font-semibold tracking-wide text-cyan-50">Disaster Response Hub</p>
-                <p className="text-sm text-slate-400">Command &amp; coordination platform</p>
-              </div>
-            </div>
-            <p className="max-w-xl text-sm leading-6 text-slate-300">
-              A professional emergency management interface for detection, resource coordination, safe routing,
-              and incident response.
+              <span className="text-base font-bold tracking-wide text-cyan-50 uppercase">AI powered DisasterHub Management Systen</span>
+            </Link>
+            <p className="text-sm text-slate-400 max-w-sm mb-6 leading-relaxed">
+              A professional emergency management interface for real-time detection, resource coordination, and incident response operations.
             </p>
-          </section>
+          </div>
 
-          <section>
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-200">Quick Links</h2>
-            <div className="mt-4 flex flex-col gap-2 text-sm">
+          <div className="col-span-1">
+            <h3 className="text-sm font-semibold text-cyan-200 uppercase tracking-widest mb-4">Platform</h3>
+            <ul className="space-y-3">
               {footerLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="inline-flex items-center gap-2 text-slate-300 transition hover:text-cyan-100"
-                >
-                  <ArrowUpRight size={14} />
-                  {item.label}
-                </Link>
+                <li key={item.href}>
+                  <Link href={item.href} className="group inline-flex items-center gap-1 text-sm text-slate-400 hover:text-cyan-400 transition-colors">
+                    {item.label}
+                    <ArrowUpRight size={12} className="opacity-0 -translate-y-1 translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0" />
+                  </Link>
+                </li>
               ))}
-            </div>
-          </section>
+            </ul>
+          </div>
 
-          <section>
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-200">System Status</h2>
-            <div className="mt-4 space-y-3 rounded-2xl border border-cyan-500/15 bg-white/5 p-4 backdrop-blur-md">
-              <p className="flex items-center gap-2 text-sm text-slate-200">
-                <ShieldCheck size={14} className="text-emerald-300" />
-                Services online and monitored
-              </p>
-              <p className="flex items-center gap-2 text-sm text-slate-200">
-                <Clock3 size={14} className="text-cyan-300" />
-                Continuous operations tracking
-              </p>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">© {new Date().getFullYear()} Disaster Response Hub</p>
-            </div>
-          </section>
+          <div className="lg:col-span-1">
+            <h3 className="text-sm font-semibold text-cyan-200 uppercase tracking-widest mb-4">System Status</h3>
+            <ul className="space-y-3 bg-white/5 rounded-xl p-4 border border-white/5">
+              <li className="flex items-center gap-3">
+                <ShieldCheck size={16} className="text-emerald-400" />
+                <span className="text-sm text-slate-300">Operational</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Clock3 size={16} className="text-cyan-400" />
+                <span className="text-sm text-slate-300">Telemetry Active</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-cyan-500/10 flex flex-col items-center gap-4 text-center md:flex-row md:justify-center md:items-center">
+          <p className="text-sm text-slate-500 text-center">© {new Date().getFullYear()} AI powered DisasterHub Management Systen. All rights reserved.</p>
         </div>
       </div>
     </footer>

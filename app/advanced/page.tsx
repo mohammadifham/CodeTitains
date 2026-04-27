@@ -1,9 +1,14 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/app/components/Navbar';
-import LiveMap from '@/app/components/LiveMap';
+import dynamic from 'next/dynamic';
+
+const LiveMap = dynamic(() => import('@/app/components/LiveMap'), {
+  ssr: false,
+  loading: () => <div className="h-[400px] w-full animate-pulse bg-slate-900/50 rounded-[28px]" />
+});
 import { useAuth } from '@/lib/auth-context';
 import DetectionCard from './components/DetectionCard';
 import AlertCard from './components/AlertCard';
@@ -88,6 +93,30 @@ interface DashboardDataResponse {
   allocations: Array<Record<string, unknown>>;
 }
 
+interface MetricBar {
+  label: string;
+  value: number;
+}
+
+interface NasaEventSummary {
+  id: string;
+  title: string;
+  category: string;
+  source: string;
+  updated: string | null;
+}
+
+interface LiveIntelligenceResponse {
+  generated_at: string;
+  incident_severity: MetricBar[];
+  request_priority: MetricBar[];
+  resource_status: MetricBar[];
+  nasa_open_events: number;
+  nasa_categories: MetricBar[];
+  nasa_events: NasaEventSummary[];
+  nasa_error: string | null;
+}
+
 type RouteStatus = 'Safe' | 'Blocked';
 
 const getCoordinatesFromLabel = (label: string): [number, number] => {
@@ -110,6 +139,13 @@ const apiBase = process.env.NEXT_PUBLIC_CHAT_API_URL ?? 'http://localhost:8000';
 function AdvancedPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+
+  const getStoredRole = (uid: string): 'admin' | 'user' => {
+    if (typeof window === 'undefined') return 'user';
+    const role = localStorage.getItem(`disasterhub_user_role_${uid}`);
+    return role === 'admin' ? 'admin' : 'user';
+  };
+
   const [isLoading, setIsLoading] = useState(true);
   const [dataError, setDataError] = useState('');
   const [data, setData] = useState<AdvancedData>({
@@ -119,27 +155,55 @@ function AdvancedPage() {
     routes: [],
     resources: [],
   });
+  const [liveMetrics, setLiveMetrics] = useState<LiveIntelligenceResponse>({
+    generated_at: '',
+    incident_severity: [],
+    request_priority: [],
+    resource_status: [],
+    nasa_open_events: 0,
+    nasa_categories: [],
+    nasa_events: [],
+    nasa_error: null,
+  });
 
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/login');
+      return;
+    }
+
+    if (!loading && user) {
+      const role = getStoredRole(user.uid);
+      if (role === 'user') {
+        router.replace('/user');
+      }
     }
   }, [loading, router, user]);
 
-  const fetchAdvancedData = async () => {
+  const fetchAdvancedData = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
     setDataError('');
 
     try {
-      const response = await fetch(`${apiBase}/api/dashboard-data`);
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => null);
+      const [dashboardResponse, metricsResponse] = await Promise.all([
+        fetch(`${apiBase}/api/dashboard-data`),
+        fetch(`${apiBase}/api/live-intelligence`),
+      ]);
+
+      if (!dashboardResponse.ok) {
+        const errorBody = await dashboardResponse.json().catch(() => null);
         throw new Error(errorBody?.detail || 'Failed to load live dashboard data.');
       }
 
-      const payload = (await response.json()) as DashboardDataResponse;
+      if (!metricsResponse.ok) {
+        const errorBody = await metricsResponse.json().catch(() => null);
+        throw new Error(errorBody?.detail || 'Failed to load live intelligence metrics.');
+      }
+
+      const payload = (await dashboardResponse.json()) as DashboardDataResponse;
+      const metricsPayload = (await metricsResponse.json()) as LiveIntelligenceResponse;
       const detections = payload.incidents.map((incident) => ({
         title: incident.title,
         location: incident.location || 'Unknown location',
@@ -195,18 +259,24 @@ function AdvancedPage() {
       }));
 
       setData({ detections, alerts, ngos, routes, resources });
+      setLiveMetrics(metricsPayload);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unable to load advanced intelligence data.';
       setDataError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    void fetchAdvancedData();
-  }, [user]);
+
+    const timeoutId = window.setTimeout(() => {
+      void fetchAdvancedData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [fetchAdvancedData, user]);
 
   const handleRefresh = () => void fetchAdvancedData();
 
@@ -267,6 +337,21 @@ function AdvancedPage() {
     [data.resources],
   );
 
+  const maxSeverityValue = useMemo(
+    () => Math.max(...liveMetrics.incident_severity.map((item) => item.value), 1),
+    [liveMetrics.incident_severity],
+  );
+
+  const maxPriorityValue = useMemo(
+    () => Math.max(...liveMetrics.request_priority.map((item) => item.value), 1),
+    [liveMetrics.request_priority],
+  );
+
+  const maxNasaValue = useMemo(
+    () => Math.max(...liveMetrics.nasa_categories.map((item) => item.value), 1),
+    [liveMetrics.nasa_categories],
+  );
+
   if (loading || !user) {
     return (
       <div className="grid min-h-screen place-items-center bg-black text-cyan-300">
@@ -281,7 +366,7 @@ function AdvancedPage() {
       <main className="min-h-[calc(100vh-80px)] bg-slate-950 text-white">
         <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <section className="mb-6 rounded-[32px] border border-cyan-500/10 bg-slate-950/95 p-6 shadow-[0_35px_80px_rgba(5,15,35,0.55)] backdrop-blur-xl">
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Advanced Disaster Intelligence</p>
                 <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-cyan-50 sm:text-4xl">
@@ -345,7 +430,88 @@ function AdvancedPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              <section className="grid gap-6 xl:grid-cols-[1.65fr_0.95fr]">
+              <section className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-[28px] border border-cyan-500/10 bg-slate-950/90 p-5 shadow-[0_30px_70px_rgba(0,0,0,0.35)]">
+                  <h3 className="text-lg font-semibold text-cyan-50">Response Pressure Bars</h3>
+
+                  <div className="mt-5 grid gap-5">
+                    <div>
+                      <p className="mb-3 text-xs uppercase tracking-[0.2em] text-cyan-200">Incident severity</p>
+                      <div className="space-y-3">
+                        {liveMetrics.incident_severity.map((item) => (
+                          <div key={item.label}>
+                            <div className="mb-1 flex items-center justify-between text-sm text-slate-300">
+                              <span>{item.label}</span>
+                              <span>{item.value}</span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                              <span className="block h-full rounded-full bg-gradient-to-r from-cyan-400 to-emerald-300" style={{ width: `${(item.value / maxSeverityValue) * 100}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="mb-3 text-xs uppercase tracking-[0.2em] text-cyan-200">Request priority</p>
+                      <div className="space-y-3">
+                        {liveMetrics.request_priority.map((item) => (
+                          <div key={item.label}>
+                            <div className="mb-1 flex items-center justify-between text-sm text-slate-300">
+                              <span>{item.label}</span>
+                              <span>{item.value}</span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                              <span className="block h-full rounded-full bg-gradient-to-r from-sky-400 to-indigo-400" style={{ width: `${(item.value / maxPriorityValue) * 100}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[28px] border border-cyan-500/10 bg-slate-950/90 p-5 shadow-[0_30px_70px_rgba(0,0,0,0.35)]">
+                  <h3 className="text-lg font-semibold text-cyan-50">NASA EONET Live Events</h3>
+                  <p className="mt-2 text-sm text-slate-400">
+                    Open events: <span className="font-semibold text-cyan-100">{liveMetrics.nasa_open_events}</span>
+                  </p>
+                  {liveMetrics.nasa_error ? (
+                    <p className="mt-3 rounded-2xl border border-amber-500/25 bg-amber-900/20 px-3 py-2 text-xs text-amber-200">
+                      {liveMetrics.nasa_error}
+                    </p>
+                  ) : null}
+
+                  <div className="mt-5 space-y-3">
+                    {liveMetrics.nasa_categories.length ? (
+                      liveMetrics.nasa_categories.map((item) => (
+                        <div key={item.label}>
+                          <div className="mb-1 flex items-center justify-between text-sm text-slate-300">
+                            <span>{item.label}</span>
+                            <span>{item.value}</span>
+                          </div>
+                          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                            <span className="block h-full rounded-full bg-gradient-to-r from-cyan-300 to-violet-400" style={{ width: `${(item.value / maxNasaValue) * 100}%` }} />
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-400">NASA category feed is unavailable right now.</p>
+                    )}
+                  </div>
+
+                  <div className="mt-5 space-y-2">
+                    {liveMetrics.nasa_events.slice(0, 3).map((event) => (
+                      <div key={event.id} className="rounded-2xl border border-cyan-500/10 bg-white/5 px-3 py-2 text-sm text-slate-300">
+                        <p className="font-medium text-cyan-100">{event.title}</p>
+                        <p className="mt-1 text-xs text-slate-400">{event.category} · {event.source}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <section className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
                 <div className="rounded-[28px] border border-cyan-500/10 bg-slate-950/90 p-5 shadow-[0_30px_70px_rgba(0,0,0,0.4)]">
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -412,7 +578,7 @@ function AdvancedPage() {
                 </div>
               </section>
 
-              <section className="grid gap-6 xl:grid-cols-3">
+              <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div className="rounded-[28px] border border-cyan-500/10 bg-slate-950/90 p-5 shadow-[0_30px_70px_rgba(0,0,0,0.35)]">
                   <h3 className="text-lg font-semibold text-cyan-50">Disaster Detection</h3>
                   <p className="mt-2 text-sm text-slate-400">Automatic identification from weather, seismic, and satellite feeds.</p>
@@ -430,7 +596,7 @@ function AdvancedPage() {
                 </div>
               </section>
 
-              <section className="grid gap-6 xl:grid-cols-2">
+              <section className="grid gap-6 md:grid-cols-2">
                 <div className="rounded-[28px] border border-cyan-500/10 bg-slate-950/90 p-5 shadow-[0_30px_70px_rgba(0,0,0,0.35)]">
                   <h3 className="text-lg font-semibold text-cyan-50">Safe Route Generation</h3>
                   <p className="mt-2 text-sm text-slate-400">Route risk evaluation with safe and blocked corridors.</p>

@@ -19,6 +19,40 @@ interface RequestListProps {
   onSelectRequest?: (request: Request) => void;
 }
 
+const REQUEST_BASE_TS = Date.now();
+const DEFAULT_REQUESTS: Request[] = [
+  {
+    id: '1',
+    title: 'Medical Supplies Needed',
+    location: 'Downtown Hospital',
+    requester: 'Dr. Smith',
+    priority: 'critical',
+    timestamp: new Date(REQUEST_BASE_TS),
+    description: 'Urgent need for oxygen tanks and bandages',
+    status: 'pending',
+  },
+  {
+    id: '2',
+    title: 'Water Distribution',
+    location: 'East District',
+    requester: 'Emergency Team',
+    priority: 'high',
+    timestamp: new Date(REQUEST_BASE_TS - 600000),
+    description: 'Safe drinking water needed for 500+ people',
+    status: 'in-progress',
+  },
+  {
+    id: '3',
+    title: 'Shelter Setup',
+    location: 'Central Park',
+    requester: 'Civil Protection',
+    priority: 'high',
+    timestamp: new Date(REQUEST_BASE_TS - 1200000),
+    description: 'Temporary shelters required for displaced families',
+    status: 'pending',
+  },
+];
+
 const RequestCard: React.FC<{
   request: Request;
   onSelect: (request: Request) => void;
@@ -71,38 +105,7 @@ const RequestCard: React.FC<{
 const MemoizedRequestCard = React.memo(RequestCard);
 
 export const RequestList: React.FC<RequestListProps> = ({
-  requests = [
-    {
-      id: '1',
-      title: 'Medical Supplies Needed',
-      location: 'Downtown Hospital',
-      requester: 'Dr. Smith',
-      priority: 'critical',
-      timestamp: new Date(),
-      description: 'Urgent need for oxygen tanks and bandages',
-      status: 'pending',
-    },
-    {
-      id: '2',
-      title: 'Water Distribution',
-      location: 'East District',
-      requester: 'Emergency Team',
-      priority: 'high',
-      timestamp: new Date(Date.now() - 600000),
-      description: 'Safe drinking water needed for 500+ people',
-      status: 'in-progress',
-    },
-    {
-      id: '3',
-      title: 'Shelter Setup',
-      location: 'Central Park',
-      requester: 'Civil Protection',
-      priority: 'high',
-      timestamp: new Date(Date.now() - 1200000),
-      description: 'Temporary shelters required for displaced families',
-      status: 'pending',
-    },
-  ],
+  requests = DEFAULT_REQUESTS,
   onSelectRequest = () => {},
 }) => {
   // Memoize sorted requests to prevent unnecessary re-renders

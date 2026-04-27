@@ -98,3 +98,27 @@ class ModelInferenceResponse(BaseModel):
     score: float
     labels: list[str]
     scores: list[float]
+
+
+class MetricBar(BaseModel):
+    label: str
+    value: int
+
+
+class NasaEventSummary(BaseModel):
+    id: str
+    title: str
+    category: str
+    source: str
+    updated: str | None = None
+
+
+class LiveIntelligenceResponse(BaseModel):
+    generated_at: str
+    incident_severity: list[MetricBar]
+    request_priority: list[MetricBar]
+    resource_status: list[MetricBar]
+    nasa_open_events: int
+    nasa_categories: list[MetricBar]
+    nasa_events: list[NasaEventSummary]
+    nasa_error: str | None = None

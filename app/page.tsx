@@ -1,170 +1,108 @@
-'use client';
-
-import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Bot, ChartColumn, CircleCheckBig, Cpu, Dot, Radar, ShieldCheck, Sparkles } from 'lucide-react';
-import styles from './page.module.css';
+import { Activity, ArrowRight, Radio, ShieldAlert, Truck } from 'lucide-react';
 
-const navItems = ['Home', 'Features', 'Dashboard'];
-
-const agentCards = [
+const capabilityCards = [
   {
-    icon: Bot,
-    title: 'Crisis Coordination Agent',
-    description: 'Generates action plans and routes incident workflows to the right teams.',
+    title: 'Live Incident Intelligence',
+    description: 'Stream alerts, classify severity, and prioritize active zones in seconds.',
+    icon: Radio,
   },
   {
-    icon: Radar,
-    title: 'Field Intelligence Agent',
-    description: 'Tracks emerging hotspots and surfaces location-based risk signals live.',
+    title: 'Automated Resource Dispatch',
+    description: 'Match requests to available teams, vehicles, and relief assets instantly.',
+    icon: Truck,
   },
   {
-    icon: ChartColumn,
-    title: 'Allocation Strategy Agent',
-    description: 'Balances supplies, squads, and response timelines for better outcomes.',
+    title: 'Coordinated Multi-Agency Control',
+    description: 'Keep local responders, NGOs, and operations leaders aligned in one view.',
+    icon: ShieldAlert,
   },
 ];
 
-const metrics = [
-  { label: 'Active responders onboarded', value: '12k+' },
-  { label: 'Emergency requests coordinated', value: '180k+' },
-  { label: 'Average dispatch efficiency lift', value: '34%' },
-  { label: 'Weekly operational consistency', value: '92%' },
-];
-
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className={styles.page}>
-      <div className={styles.gridOverlay}></div>
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.16)_0%,transparent_36%),radial-gradient(circle_at_85%_12%,rgba(56,189,248,0.12)_0%,transparent_35%),linear-gradient(180deg,rgba(2,6,23,0.8)_0%,rgba(2,6,23,1)_72%)]" />
 
-      <div className={styles.topStrip}>
-        <div className={`${styles.container} ${styles.topStripInner}`}>
-          <ShieldCheck size={12} />
-          Built for emergency ops teams and incident command centers
-        </div>
-      </div>
-
-      <header className={styles.header}>
-        <div className={`${styles.container} ${styles.headerInner}`}>
-          <div className={styles.brand}>
-            <div className={styles.brandIcon}>
-              <Sparkles size={18} />
+      <section className="relative mx-auto w-full max-w-7xl px-4 pb-24 pt-20 sm:px-6 lg:px-8 lg:pt-24">
+        <div className="grid gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
+          <div className="space-y-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
+              <Activity size={14} />
+              AI powered DisasterHub Management Systen
             </div>
-            <div>
-              <p className={styles.brandTitle}>DISASTERHUB</p>
-              <p className={styles.brandSub}>AI Incident Operations Platform</p>
+
+            <div className="space-y-6">
+              <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight text-slate-50 sm:text-6xl lg:text-7xl">
+                Command the chaos with
+                <span className="block text-cyan-300">one real-time control center.</span>
+              </h1>
+              <p className="max-w-2xl text-lg leading-relaxed text-slate-300 sm:text-xl">
+                AI powered DisasterHub Management Systen gives response teams instant situational awareness, triage automation, and clear cross-agency coordination from the first alert to final resolution.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href="/dashboard"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-cyan-400 px-6 text-sm font-semibold uppercase tracking-[0.08em] text-slate-950 transition hover:bg-cyan-300"
+              >
+                Open Dashboard
+                <ArrowRight size={16} />
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex h-12 items-center rounded-full border border-cyan-400/35 bg-white/5 px-6 text-sm font-semibold uppercase tracking-[0.08em] text-cyan-100 transition hover:border-cyan-300/60 hover:bg-white/10"
+              >
+                Secure Sign In
+              </Link>
             </div>
           </div>
 
-          <nav className={styles.navPills}>
-            {navItems.map((item, index) => (
-              <button key={item} type="button" className={`${styles.pill} ${index === 0 ? styles.pillActive : ''}`}>
-                {item}
-              </button>
-            ))}
-          </nav>
-
-          <div className={styles.actions}>
-            <Link href="/dashboard" className={styles.ghostBtn}>
-              Dashboard
-            </Link>
-            <Link href="/dashboard" className={styles.primaryBtn}>
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className={styles.main}>
-        <div className={styles.container}>
-          <section className={styles.hero}>
-            <div className={styles.heroGrid}>
-              <div>
-                <div className={styles.tag}>
-                  <ShieldCheck size={13} /> Production-ready command platform
+          <div className="rounded-3xl border border-cyan-500/20 bg-slate-900/60 p-6 shadow-[0_20px_60px_rgba(2,132,199,0.25)] backdrop-blur-xl sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Active Operations Snapshot</p>
+            <div className="mt-6 space-y-5">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-sm text-slate-400">Incidents Monitored</p>
+                <p className="mt-2 text-3xl font-semibold text-cyan-200">128</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Teams Live</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-100">42</p>
                 </div>
-
-                <h1 className={styles.title}>Disaster Management, Built for Real Response Teams</h1>
-                <p className={styles.subtitle}>
-                  Coordinate incidents, allocate resources, and execute field operations with a clear command interface designed for speed and reliability.
-                </p>
-
-                <div className={styles.ctas}>
-                  <Link href="/dashboard" className={styles.primaryBtn}>
-                    Start Operations <ArrowRight size={16} />
-                  </Link>
-                  <Link href="/dashboard" className={styles.ghostBtn}>
-                    View Command Dashboard
-                  </Link>
-                </div>
-
-                <div className={styles.chips}>
-                  <span className={`${styles.chip} ${styles.chipCyan}`}>
-                    <Cpu size={13} /> AI Dispatch Engine
-                  </span>
-                  <span className={`${styles.chip} ${styles.chipViolet}`}>
-                    <Cpu size={13} /> Mission Timeline Intelligence
-                  </span>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Avg Dispatch</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-100">3.8m</p>
                 </div>
               </div>
-
-              <aside className={styles.sidePanel}>
-                {agentCards.map((card) => {
-                  const Icon = card.icon;
-
-                  return (
-                    <article key={card.title} className={styles.agentCard}>
-                      <div className={styles.agentHeader}>
-                        <div className={styles.agentIcon}>
-                          <Icon size={16} />
-                        </div>
-                        <div>
-                          <h2 className={styles.agentTitle}>{card.title}</h2>
-                          <p className={styles.agentDesc}>{card.description}</p>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-
-                <div className={styles.pulse}>
-                  <p className={styles.pulseLabel}>Mission Pulse</p>
-                  <p className={styles.pulseText}>
-                    <Dot size={14} /> 14 new field updates processed in the last hour
-                  </p>
-                </div>
-              </aside>
+              <div className="rounded-2xl border border-cyan-400/25 bg-cyan-500/10 p-4 text-sm text-cyan-100">
+                Priority channels are synchronized. Response continuity status: Stable.
+              </div>
             </div>
-          </section>
-
-          <section className={styles.metrics}>
-            {metrics.map((metric) => (
-              <article key={metric.label} className={styles.metricCard}>
-                <p className={styles.metricLabel}>{metric.label}</p>
-                <p className={styles.metricValue}>{metric.value}</p>
-                <p className={styles.metricHint}>
-                  <CircleCheckBig size={14} /> Verified this week
-                </p>
-              </article>
-            ))}
-          </section>
-
-          <section className={styles.finalCta}>
-            <h3 className={styles.finalTitle}>Launch Your Mission Dashboard</h3>
-            <p className={styles.finalSub}>
-              Start managing requests, assignments, and field updates from a unified disaster management interface.
-            </p>
-            <div className={styles.finalActions}>
-              <Link href="/dashboard" className={styles.primaryBtn}>
-                Open Dashboard <ArrowRight size={16} />
-              </Link>
-              <Link href="/dashboard" className={styles.ghostBtn}>
-                View Demo Flow
-              </Link>
-            </div>
-          </section>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="relative mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
+        <div className="grid gap-5 md:grid-cols-3">
+          {capabilityCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <article
+                key={card.title}
+                className="group rounded-3xl border border-cyan-500/15 bg-slate-900/55 p-6 transition hover:-translate-y-1 hover:border-cyan-400/45 hover:bg-slate-900/75"
+              >
+                <span className="grid h-11 w-11 place-items-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 text-cyan-300">
+                  <Icon size={18} />
+                </span>
+                <h2 className="mt-5 text-xl font-semibold text-slate-100">{card.title}</h2>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">{card.description}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    </main>
   );
 }

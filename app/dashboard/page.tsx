@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/app/components/Navbar';
 import Chatbot from '@/app/components/Chatbot';
-import LiveMap from '@/app/components/LiveMap';
+import dynamic from 'next/dynamic';
+
+const LiveMap = dynamic(() => import('@/app/components/LiveMap'), {
+  ssr: false,
+  loading: () => <div className="h-[400px] w-full animate-pulse bg-slate-900/50 rounded-2xl" />
+});
 import { useAuth } from '@/lib/auth-context';
-import { AlertTriangle, Bot, MapPinned, Package, Plus } from 'lucide-react';
+import { AlertTriangle, Bot, MapPinned, Package } from 'lucide-react';
 import styles from './dashboard.module.css';
 
 interface IncidentRecord {
@@ -69,11 +74,42 @@ interface DashboardDataResponse {
   allocations: AllocationRecord[];
 }
 
+interface MetricBar {
+  label: string;
+  value: number;
+}
+
+interface NasaEventSummary {
+  id: string;
+  title: string;
+  category: string;
+  source: string;
+  updated: string | null;
+}
+
+interface LiveIntelligenceResponse {
+  generated_at: string;
+  incident_severity: MetricBar[];
+  request_priority: MetricBar[];
+  resource_status: MetricBar[];
+  nasa_open_events: number;
+  nasa_categories: MetricBar[];
+  nasa_events: NasaEventSummary[];
+  nasa_error: string | null;
+}
+
 const apiBase = process.env.NEXT_PUBLIC_CHAT_API_URL ?? 'http://localhost:8000';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+
+  const getStoredRole = (uid: string): 'admin' | 'user' => {
+    if (typeof window === 'undefined') return 'user';
+    const role = localStorage.getItem(`disasterhub_user_role_${uid}`);
+    return role === 'admin' ? 'admin' : 'user';
+  };
+
   const [chatOpen, setChatOpen] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [dataError, setDataError] = useState('');
@@ -87,6 +123,16 @@ export default function DashboardPage() {
   const [requests, setRequests] = useState<RequestRecord[]>([]);
   const [resources, setResources] = useState<ResourceRecord[]>([]);
   const [allocations, setAllocations] = useState<AllocationRecord[]>([]);
+  const [intelligence, setIntelligence] = useState<LiveIntelligenceResponse>({
+    generated_at: '',
+    incident_severity: [],
+    request_priority: [],
+    resource_status: [],
+    nasa_open_events: 0,
+    nasa_categories: [],
+    nasa_events: [],
+    nasa_error: null,
+  });
   const [allocation, setAllocation] = useState({ resourceId: '', requestId: '', units: 1 });
 
   const requestMap = useMemo(
@@ -126,39 +172,75 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!loading && !user) {
       router.replace('/login');
+      return;
+    }
+
+    if (!loading && user) {
+      const role = getStoredRole(user.uid);
+      if (role === 'user') {
+        router.replace('/user');
+      }
     }
   }, [loading, router, user]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     if (!user) return;
 
     try {
       setIsLoadingData(true);
       setDataError('');
-      const response = await fetch(`${apiBase}/api/dashboard-data`);
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => null);
+      const [dashboardResponse, intelligenceResponse] = await Promise.all([
+        fetch(`${apiBase}/api/dashboard-data`),
+        fetch(`${apiBase}/api/live-intelligence`),
+      ]);
+
+      if (!dashboardResponse.ok) {
+        const errorBody = await dashboardResponse.json().catch(() => null);
         const message = errorBody?.detail || 'Failed to load dashboard data.';
         throw new Error(message);
       }
 
-      const payload = (await response.json()) as DashboardDataResponse;
+      if (!intelligenceResponse.ok) {
+        const errorBody = await intelligenceResponse.json().catch(() => null);
+        const message = errorBody?.detail || 'Failed to load live intelligence metrics.';
+        throw new Error(message);
+      }
+
+      const payload = (await dashboardResponse.json()) as DashboardDataResponse;
+      const intelligencePayload = (await intelligenceResponse.json()) as LiveIntelligenceResponse;
       setStats(payload.stats);
       setIncidents(payload.incidents);
       setRequests(payload.requests);
       setResources(payload.resources);
       setAllocations(payload.allocations);
+      setIntelligence(intelligencePayload);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Could not load live dashboard data. Check backend and Supabase tables.';
       setDataError(message);
     } finally {
       setIsLoadingData(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    void loadDashboardData();
-  }, [user]);
+    if (!user) return;
+
+    const timeoutId = window.setTimeout(() => {
+      void loadDashboardData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [loadDashboardData, user]);
+
+  const maxSeverityValue = useMemo(
+    () => Math.max(...intelligence.incident_severity.map((item) => item.value), 1),
+    [intelligence.incident_severity],
+  );
+
+  const maxNasaValue = useMemo(
+    () => Math.max(...intelligence.nasa_categories.map((item) => item.value), 1),
+    [intelligence.nasa_categories],
+  );
 
   if (loading || !user) {
     return (
@@ -215,9 +297,6 @@ export default function DashboardPage() {
               <button className={styles.secondaryBtn} type="button" onClick={goToAdvancedIntelligence}>
                 Advanced Disaster Intelligence
               </button>
-              <button className={styles.newBtn}>
-                <Plus size={15} /> Create New Mission
-              </button>
             </div>
           </header>
 
@@ -232,6 +311,53 @@ export default function DashboardPage() {
 
           {dataError ? <div className={styles.alertCard}>{dataError}</div> : null}
           {isLoadingData ? <div className={styles.infoCard}>Loading live dashboard data...</div> : null}
+
+          <section className={styles.chartsGrid}>
+            <article className={styles.chartCard}>
+              <div className={styles.chartHead}>
+                <h2 className={styles.chartTitle}>Incident Severity Distribution</h2>
+                <p className={styles.chartSub}>Live backend statistics</p>
+              </div>
+              <div className={styles.chartBars}>
+                {intelligence.incident_severity.map((item) => (
+                  <div key={item.label} className={styles.barRow}>
+                    <div className={styles.barMeta}>
+                      <span>{item.label}</span>
+                      <span>{item.value}</span>
+                    </div>
+                    <div className={styles.barTrack}>
+                      <span className={styles.barFill} style={{ width: `${(item.value / maxSeverityValue) * 100}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className={styles.chartCard}>
+              <div className={styles.chartHead}>
+                <h2 className={styles.chartTitle}>NASA Open Event Categories</h2>
+                <p className={styles.chartSub}>NASA EONET live feed · {intelligence.nasa_open_events} open events</p>
+              </div>
+              {intelligence.nasa_error ? <p className={styles.nasaError}>{intelligence.nasa_error}</p> : null}
+              <div className={styles.chartBars}>
+                {intelligence.nasa_categories.length ? (
+                  intelligence.nasa_categories.map((item) => (
+                    <div key={item.label} className={styles.barRow}>
+                      <div className={styles.barMeta}>
+                        <span>{item.label}</span>
+                        <span>{item.value}</span>
+                      </div>
+                      <div className={styles.barTrack}>
+                        <span className={styles.nasaBarFill} style={{ width: `${(item.value / maxNasaValue) * 100}%` }} />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className={styles.feedMeta}>NASA category data is not available right now.</p>
+                )}
+              </div>
+            </article>
+          </section>
 
           <section className={styles.grid}>
             <article className={styles.card}>

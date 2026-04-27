@@ -15,12 +15,6 @@ interface NavItem {
   href: string;
 }
 
-const navItems: NavItem[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Learn', href: '/' },
-  { label: 'Dashboard', href: '/dashboard' },
-];
-
 function Navbar({ onMenuToggle }: NavbarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -28,8 +22,8 @@ function Navbar({ onMenuToggle }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-cyan-500/10 bg-slate-950/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex min-w-[260px] items-center gap-3">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3">
           {onMenuToggle ? (
             <button
               type="button"
@@ -46,50 +40,63 @@ function Navbar({ onMenuToggle }: NavbarProps) {
               <Activity size={18} />
             </span>
             <div>
-              <p className="text-sm font-semibold tracking-[0.2em] text-cyan-100">DISASTERHUB</p>
-              <p className="text-xs text-slate-400">Command & Coordination</p>
+              <p className="text-sm font-semibold tracking-[0.08em] text-cyan-100">AI POWERED DISASTERHUB</p>
+              <p className="text-xs text-slate-400">Management Systen</p>
             </div>
           </Link>
         </div>
 
-        <nav className="hidden flex-1 justify-center md:flex">
-          <div className="flex items-center gap-1 rounded-full border border-cyan-500/15 bg-white/5 p-1">
-            {navItems.map((item) => {
-              const isActive = activeNav === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                    isActive ? 'bg-cyan-500/15 text-cyan-100' : 'text-slate-300 hover:bg-white/5 hover:text-cyan-100'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
+        <div className="flex-1" />
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/"
+            className={`hidden h-10 items-center gap-2 rounded-full border px-4 sm:px-5 text-xs sm:text-sm font-semibold transition whitespace-nowrap lg:inline-flex ${
+              activeNav === '/'
+                ? 'border-cyan-400/40 bg-cyan-500/15 text-cyan-100'
+                : 'border-cyan-500/20 bg-white/5 text-cyan-100 hover:border-cyan-400/40 hover:bg-white/10'
+            }`}
+          >
+            Home
+          </Link>
+
           {!user ? (
-            <span className="hidden rounded-full border border-slate-400/15 bg-slate-950/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300 sm:inline-flex">
+            <span className="hidden rounded-full border border-slate-400/15 bg-slate-950/70 px-3 py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-slate-300 md:inline-flex whitespace-nowrap">
               Guest mode
             </span>
           ) : null}
 
-          <Link
-            href={user ? '/dashboard' : '/login'}
-            className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-cyan-100 transition hover:border-cyan-400/40 hover:bg-white/10"
-          >
-            {user ? 'Open Dashboard' : 'Sign In'}
-          </Link>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-full bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-          >
-            Start Response
-          </Link>
+          {!user ? (
+            <>
+              <Link
+                href="/login"
+                className="flex h-10 items-center gap-2 rounded-full border border-cyan-500/20 bg-white/5 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-cyan-100 transition hover:border-cyan-400/40 hover:bg-white/10 whitespace-nowrap"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/dashboard"
+                className="flex h-10 items-center gap-2 rounded-full bg-cyan-500 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 whitespace-nowrap"
+              >
+                Start Response
+              </Link>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={logout}
+                className="flex h-10 items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-red-200 transition hover:bg-red-500/20 hover:border-red-400/40 whitespace-nowrap"
+              >
+                Sign Out
+              </button>
+              <Link
+                href="/dashboard"
+                className="flex h-10 items-center gap-2 rounded-full bg-cyan-500 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 whitespace-nowrap"
+              >
+                Open Dashboard
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

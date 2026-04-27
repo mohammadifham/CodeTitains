@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Disaster Response Hub - AI-Powered Emergency Coordination",
-  description: "Real-time disaster response and resource allocation system with AI assistance",
+  title: "AI powered DisasterHub Management Systen",
+  description: "AI powered DisasterHub Management Systen for real-time emergency coordination",
   keywords: "disaster, emergency, response, resources, allocation, ai",
 };
 

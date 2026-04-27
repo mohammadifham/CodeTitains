@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
-import { Package, MapPin, Truck, Zap } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Package, MapPin, Zap } from 'lucide-react';
 
 interface Resource {
   id: string;
@@ -18,6 +18,50 @@ interface ResourceListProps {
   resources?: Resource[];
   onSelectResource?: (resource: Resource) => void;
 }
+
+const RESOURCE_BASE_TS = Date.now();
+const DEFAULT_RESOURCES: Resource[] = [
+  {
+    id: 'r1',
+    name: 'Oxygen Tanks',
+    type: 'medical',
+    quantity: 150,
+    unit: 'units',
+    location: 'Medical Warehouse A',
+    status: 'available',
+    lastUpdated: new Date(RESOURCE_BASE_TS),
+  },
+  {
+    id: 'r2',
+    name: 'Emergency Food Kits',
+    type: 'food',
+    quantity: 500,
+    unit: 'boxes',
+    location: 'Distribution Center',
+    status: 'available',
+    lastUpdated: new Date(RESOURCE_BASE_TS),
+  },
+  {
+    id: 'r3',
+    name: 'Water Tanks',
+    type: 'water',
+    quantity: 50,
+    unit: 'tanks',
+    location: 'Central Supply Point',
+    status: 'deployed',
+    lastUpdated: new Date(RESOURCE_BASE_TS - 300000),
+  },
+  {
+    id: 'r4',
+    name: 'Emergency Vehicles',
+    type: 'transport',
+    quantity: 20,
+    unit: 'vehicles',
+    location: 'Fleet Station',
+    status: 'available',
+    lastUpdated: new Date(RESOURCE_BASE_TS),
+  },
+];
 
 const ResourceCard: React.FC<{
   resource: Resource;
@@ -95,48 +139,7 @@ const ResourceCard: React.FC<{
 const MemoizedResourceCard = React.memo(ResourceCard);
 
 export const ResourceList: React.FC<ResourceListProps> = ({
-  resources = [
-    {
-      id: 'r1',
-      name: 'Oxygen Tanks',
-      type: 'medical',
-      quantity: 150,
-      unit: 'units',
-      location: 'Medical Warehouse A',
-      status: 'available',
-      lastUpdated: new Date(),
-    },
-    {
-      id: 'r2',
-      name: 'Emergency Food Kits',
-      type: 'food',
-      quantity: 500,
-      unit: 'boxes',
-      location: 'Distribution Center',
-      status: 'available',
-      lastUpdated: new Date(),
-    },
-    {
-      id: 'r3',
-      name: 'Water Tanks',
-      type: 'water',
-      quantity: 50,
-      unit: 'tanks',
-      location: 'Central Supply Point',
-      status: 'deployed',
-      lastUpdated: new Date(Date.now() - 300000),
-    },
-    {
-      id: 'r4',
-      name: 'Emergency Vehicles',
-      type: 'transport',
-      quantity: 20,
-      unit: 'vehicles',
-      location: 'Fleet Station',
-      status: 'available',
-      lastUpdated: new Date(),
-    },
-  ],
+  resources = DEFAULT_RESOURCES,
   onSelectResource = () => {},
 }) => {
   // Memoize resources by status

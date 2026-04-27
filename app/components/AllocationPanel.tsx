@@ -16,25 +16,28 @@ interface AllocationPanelProps {
   onAllocate?: (allocation: Allocation) => void;
 }
 
+const ALLOCATION_BASE_TS = Date.now();
+const INITIAL_ALLOCATIONS: Allocation[] = [
+  {
+    id: '1',
+    resourceId: 'r1',
+    requestId: '1',
+    quantity: 50,
+    status: 'dispatched',
+    timestamp: new Date(ALLOCATION_BASE_TS - 3600000),
+  },
+  {
+    id: '2',
+    resourceId: 'r2',
+    requestId: '2',
+    quantity: 100,
+    status: 'delivered',
+    timestamp: new Date(ALLOCATION_BASE_TS - 7200000),
+  },
+];
+
 export const AllocationPanel: React.FC<AllocationPanelProps> = ({ onAllocate }) => {
-  const [allocations, setAllocations] = useState<Allocation[]>([
-    {
-      id: '1',
-      resourceId: 'r1',
-      requestId: '1',
-      quantity: 50,
-      status: 'dispatched',
-      timestamp: new Date(Date.now() - 3600000),
-    },
-    {
-      id: '2',
-      resourceId: 'r2',
-      requestId: '2',
-      quantity: 100,
-      status: 'delivered',
-      timestamp: new Date(Date.now() - 7200000),
-    },
-  ]);
+  const [allocations, setAllocations] = useState<Allocation[]>(INITIAL_ALLOCATIONS);
 
   const [formData, setFormData] = useState({
     resourceId: '',

@@ -1,9 +1,12 @@
 import os
 import uuid
+from collections import Counter
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+import httpx
 
 from app.schemas import (
     AllocationCreate,
@@ -16,8 +19,11 @@ from app.schemas import (
     DashboardStats,
     IncidentCreate,
     IncidentRecord,
+    LiveIntelligenceResponse,
+    MetricBar,
     ModelInferenceRequest,
     ModelInferenceResponse,
+    NasaEventSummary,
     RequestCreate,
     RequestRecord,
     ResourceCreate,
@@ -112,6 +118,51 @@ def _default_dashboard_data() -> DashboardDataResponse:
     )
 
 
+def _metric_bars(counter: Counter, labels: list[str]) -> list[MetricBar]:
+    return [MetricBar(label=label, value=int(counter.get(label, 0))) for label in labels]
+
+
+async def _fetch_nasa_events() -> tuple[list[NasaEventSummary], list[MetricBar], int, str | None]:
+    nasa_url = os.getenv("NASA_EONET_URL", "https://eonet.gsfc.nasa.gov/api/v3/events")
+    params = {"status": "open", "limit": int(os.getenv("NASA_EONET_LIMIT", "30"))}
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(nasa_url, params=params)
+            response.raise_for_status()
+            payload = response.json()
+    except Exception as exc:
+        return [], [], 0, f"NASA feed unavailable: {exc}"
+
+    events = payload.get("events", []) if isinstance(payload, dict) else []
+    category_counter: Counter[str] = Counter()
+    summaries: list[NasaEventSummary] = []
+
+    for event in events:
+        categories = event.get("categories", []) if isinstance(event, dict) else []
+        primary_category = categories[0].get("title", "Other") if categories else "Other"
+        category_counter[primary_category] += 1
+
+        sources = event.get("sources", []) if isinstance(event, dict) else []
+        source_label = sources[0].get("id", "NASA EONET") if sources else "NASA EONET"
+
+        summaries.append(
+            NasaEventSummary(
+                id=str(event.get("id", "unknown")),
+                title=str(event.get("title", "Untitled NASA event")),
+                category=primary_category,
+                source=source_label,
+                updated=event.get("geometry", [{}])[-1].get("date") if event.get("geometry") else None,
+            )
+        )
+
+    nasa_categories = [
+        MetricBar(label=label, value=value)
+        for label, value in category_counter.most_common(6)
+    ]
+    return summaries[:6], nasa_categories, len(events), None
+
+
 @app.get("/api/dashboard-data", response_model=DashboardDataResponse)
 async def dashboard_data() -> DashboardDataResponse:
     store = get_supabase_store()
@@ -149,6 +200,40 @@ async def dashboard_data() -> DashboardDataResponse:
         requests=[RequestRecord(**item) for item in requests],
         resources=[ResourceRecord(**item) for item in resources],
         allocations=[AllocationRecord(**item) for item in allocations],
+    )
+
+
+@app.get("/api/live-intelligence", response_model=LiveIntelligenceResponse)
+async def live_intelligence() -> LiveIntelligenceResponse:
+    store = get_supabase_store()
+
+    incidents: list[dict] = []
+    requests: list[dict] = []
+    resources: list[dict] = []
+
+    if store is not None:
+        try:
+            incidents = await store.list_incidents()
+            requests = await store.list_requests()
+            resources = await store.list_resources()
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Failed to load intelligence metrics: {exc}") from exc
+
+    incident_counter = Counter(item.get("severity", "Low") for item in incidents)
+    request_counter = Counter(item.get("priority", "Low") for item in requests)
+    resource_counter = Counter(item.get("status", "depleted") for item in resources)
+
+    nasa_events, nasa_categories, nasa_open_events, nasa_error = await _fetch_nasa_events()
+
+    return LiveIntelligenceResponse(
+        generated_at=datetime.now(timezone.utc).isoformat(),
+        incident_severity=_metric_bars(incident_counter, ["Critical", "High", "Medium", "Low"]),
+        request_priority=_metric_bars(request_counter, ["Critical", "High", "Medium", "Low"]),
+        resource_status=_metric_bars(resource_counter, ["available", "limited", "depleted"]),
+        nasa_open_events=nasa_open_events,
+        nasa_categories=nasa_categories,
+        nasa_events=nasa_events,
+        nasa_error=nasa_error,
     )
 
 
