@@ -117,7 +117,7 @@ export default function UserPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/login');
+      router.replace('/login?redirect=/user');
     }
   }, [loading, router, user]);
 
@@ -196,8 +196,12 @@ export default function UserPage() {
     }
   };
 
-  if (loading || !user) {
+  if (loading) {
     return <div className="min-h-screen bg-slate-950 text-cyan-300 grid place-items-center">Verifying access...</div>;
+  }
+
+  if (!user) {
+    return <div className="min-h-screen bg-slate-950 text-cyan-300 grid place-items-center">Redirecting to sign in...</div>;
   }
 
   return (

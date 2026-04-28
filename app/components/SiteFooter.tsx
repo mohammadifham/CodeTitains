@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Activity, Clock3, ShieldCheck, ArrowUpRight } from 'lucide-react';
 
 const footerLinks = [
-  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Dashboard', href: '/login?redirect=/dashboard' },
   { label: 'Advanced Intelligence', href: '/advanced' },
 ];
 

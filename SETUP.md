@@ -69,7 +69,7 @@ You need to set up Firebase to enable authentication:
 #### Step 3: Add Your Authorized Domain
 1. Go to **Authentication** → **Settings** → **Authorized domains**
 2. Add `localhost:3000` for development
-3. Add your production domain later
+3. Add your Render production domain later, for example `disasterhub-8cz4.onrender.com`
 
 #### Step 4: Get Firebase Credentials
 1. Go to **Project Settings** (gear icon)

@@ -163,7 +163,7 @@ function AdvancedPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/login');
+      router.replace('/login?redirect=/advanced');
       return;
     }
 

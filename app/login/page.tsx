@@ -9,8 +9,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 const getReadableAuthError = (error: unknown) => {
   const code = (error as { code?: string })?.code || '';
   const message = (error as { message?: string })?.message || '';
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'your deployment domain';
 
-  if (code === 'auth/unauthorized-domain') return 'This domain is not authorized in Firebase. Add localhost to Firebase Authentication -> Settings -> Authorized domains.';
+  if (code === 'auth/unauthorized-domain') return `This domain is not authorized in Firebase. Add ${hostname} to Firebase Authentication -> Settings -> Authorized domains.`;
   if (code === 'auth/operation-not-allowed') return 'Google Sign-In is disabled in Firebase. Enable it under Authentication -> Sign-in method.';
   if (code === 'auth/configuration-not-found') return 'Firebase auth configuration is missing. In Firebase Console, open Authentication, click Get started, and enable Google under Sign-in method.';
   if (code === 'auth/popup-closed-by-user') return 'The sign-in popup was closed before completing login. Please try again.';

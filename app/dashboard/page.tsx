@@ -215,6 +215,12 @@ export default function DashboardPage() {
   }, [user]);
 
   useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login?redirect=/dashboard');
+    }
+  }, [loading, router, user]);
+
+  useEffect(() => {
     if (!user) return;
 
     const timeoutId = window.setTimeout(() => {
@@ -234,10 +240,18 @@ export default function DashboardPage() {
     [intelligence.nasa_categories],
   );
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 text-cyan-300 grid place-items-center">
         Verifying access...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-cyan-300 grid place-items-center">
+        Redirecting to sign in...
       </div>
     );
   }

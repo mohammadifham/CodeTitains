@@ -20,6 +20,8 @@ const capabilityCards = [
 ];
 
 export default function HomePage() {
+  const dashboardHref = '/login?redirect=/dashboard';
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.16)_0%,transparent_36%),radial-gradient(circle_at_85%_12%,rgba(56,189,248,0.12)_0%,transparent_35%),linear-gradient(180deg,rgba(2,6,23,0.8)_0%,rgba(2,6,23,1)_72%)]" />
@@ -44,7 +46,7 @@ export default function HomePage() {
 
             <div className="flex flex-wrap items-center gap-4">
               <Link
-                href="/dashboard"
+                href={dashboardHref}
                 className="inline-flex h-12 items-center gap-2 rounded-full bg-cyan-400 px-6 text-sm font-semibold uppercase tracking-[0.08em] text-slate-950 transition hover:bg-cyan-300"
               >
                 Open Dashboard

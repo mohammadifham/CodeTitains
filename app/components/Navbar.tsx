@@ -19,6 +19,7 @@ function Navbar({ onMenuToggle }: NavbarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const activeNav = useMemo(() => pathname, [pathname]);
+  const dashboardHref = user ? '/dashboard' : '/login?redirect=/dashboard';
 
   return (
     <header className="sticky top-0 z-50 border-b border-cyan-500/10 bg-slate-950/90 backdrop-blur-xl">
@@ -75,7 +76,7 @@ function Navbar({ onMenuToggle }: NavbarProps) {
                 Sign In
               </Link>
               <Link
-                href="/dashboard"
+                href={dashboardHref}
                 className="flex h-10 items-center gap-2 rounded-full bg-cyan-500 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 whitespace-nowrap"
               >
                 Start Response
@@ -90,7 +91,7 @@ function Navbar({ onMenuToggle }: NavbarProps) {
                 Sign Out
               </button>
               <Link
-                href="/dashboard"
+                href={dashboardHref}
                 className="flex h-10 items-center gap-2 rounded-full bg-cyan-500 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 whitespace-nowrap"
               >
                 Open Dashboard
