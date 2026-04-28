@@ -31,11 +31,29 @@ export const Chatbot: React.FC = () => {
   );
   const [historyLoadedSession, setHistoryLoadedSession] = useState('');
   const [error, setError] = useState('');
+  const [backendAvailable, setBackendAvailable] = useState(true);
+  const [renderError, setRenderError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    // Check if backend is available
+    const checkBackend = async () => {
+      try {
+        console.log(`[Chatbot] Checking backend health at: ${apiBase}/health`);
+        const response = await fetch(`${apiBase}/health`, { signal: AbortSignal.timeout(3000) });
+        setBackendAvailable(response.ok);
+        console.log(`[Chatbot] Backend health check: ${response.ok}`);
+      } catch (err) {
+        console.error('[Chatbot] Backend health check failed:', err);
+        setBackendAvailable(false);
+      }
+    };
+    checkBackend();
+  }, []);
 
   useEffect(() => {
     if (!user || !sessionId || historyLoadedSession === sessionId) return;
@@ -76,6 +94,11 @@ export const Chatbot: React.FC = () => {
     const trimmedInput = input.trim();
     if (!trimmedInput || isLoading || !user) return;
 
+    if (!backendAvailable) {
+      setError('Backend service is not available. Please check NEXT_PUBLIC_CHAT_API_URL in your environment variables.');
+      return;
+    }
+
     setError('');
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -106,7 +129,8 @@ export const Chatbot: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Backend chat request failed.');
+        setBackendAvailable(false);
+        throw new Error('Backend chat request failed. Service may be down.');
       }
 
       const payload = (await response.json()) as { reply?: string; session_id?: string };
@@ -128,20 +152,20 @@ export const Chatbot: React.FC = () => {
         },
       ]);
     } catch {
-      setError('Failed to contact AI backend. Check the backend server and environment settings.');
+      setError('Failed to contact AI backend. Ensure the backend service is running and NEXT_PUBLIC_CHAT_API_URL is set correctly.');
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           sender: 'bot',
-          text: 'I could not reach the AI backend. Please verify the backend server and API key setup.',
+          text: 'I could not reach the AI backend. Please verify the backend server and API configuration.',
           timestamp: new Date(),
         },
       ]);
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages, sessionId, user]);
+  }, [input, isLoading, messages, sessionId, user, backendAvailable]);
 
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -165,7 +189,42 @@ export const Chatbot: React.FC = () => {
     );
   }
 
-  return (
+  if (renderError) {
+    return (
+      <div className="h-full flex flex-col p-4 bg-slate-950/80 backdrop-blur-2xl justify-center items-center gap-3">
+        <div className="text-center">
+          <p className="text-sm text-red-300 font-semibold mb-2">⚠️ Render Error</p>
+          <p className="text-xs text-red-200/70">{renderError}</p>
+          <button 
+            onClick={() => setRenderError(null)}
+            className="mt-3 px-3 py-1 text-xs bg-red-500/20 border border-red-400 text-red-300 rounded hover:bg-red-500/30"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!backendAvailable) {
+    return (
+      <div className="h-full flex flex-col p-4 bg-slate-950/80 backdrop-blur-2xl justify-center items-center gap-3">
+        <div className="text-center">
+          <p className="text-sm text-yellow-300 font-semibold mb-2">⚠️ Service Unavailable</p>
+          <p className="text-xs text-yellow-200/70">The chat backend is not currently available.</p>
+          <p className="text-xs text-yellow-200/70 mt-1">Check that:</p>
+          <ul className="text-xs text-yellow-200/50 mt-2 space-y-1 text-left">
+            <li>✓ Backend service is running</li>
+            <li>✓ NEXT_PUBLIC_CHAT_API_URL is configured</li>
+            <li>✓ Backend API URL is correct: {apiBase}</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
+  try {
+    return (
     <div className="h-full flex flex-col p-4 bg-slate-950/80 backdrop-blur-2xl">
       <div className="mb-4 flex items-center justify-between border-b border-cyan-500/30 pb-3 shadow-[0_4px_20px_-10px_rgba(34,211,238,0.3)]">
         <div className="flex items-center gap-3">
@@ -239,7 +298,20 @@ export const Chatbot: React.FC = () => {
         </button>
       </div>
     </div>
-  );
+    );
+  } catch (err) {
+    console.error('Chatbot render error:', err);
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
+    setRenderError(errorMsg);
+    return (
+      <div className="h-full flex flex-col p-4 bg-slate-950/80 backdrop-blur-2xl justify-center items-center gap-3">
+        <div className="text-center">
+          <p className="text-sm text-red-300 font-semibold mb-2">⚠️ Error</p>
+          <p className="text-xs text-red-200/70">{errorMsg}</p>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default React.memo(Chatbot);

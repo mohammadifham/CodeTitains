@@ -90,9 +90,41 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 NEXT_PUBLIC_ADMIN_EMAIL=the_one_admin_email@yourdomain.com
 NEXT_PUBLIC_NASA_API_KEY=your_nasa_api_key
+NEXT_PUBLIC_CHAT_API_URL=http://localhost:8000
 ```
 
-### 2. Start Development Server
+### 2A. Configure Chatbot Backend (IMPORTANT)
+
+The chatbot requires a running backend service. There are two setup modes:
+
+#### Local Development
+```bash
+NEXT_PUBLIC_CHAT_API_URL=http://localhost:8000
+```
+
+To run the backend locally:
+```bash
+cd backend
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
+```
+
+#### Production Deployment (Render/Railway)
+The chatbot will **NOT work** unless you set `NEXT_PUBLIC_CHAT_API_URL` in your deployment environment.
+
+**Steps:**
+1. Deploy both backend and frontend services
+2. Get your backend service URL (e.g., `https://disasterhub-backend.onrender.com`)
+3. Set environment variable in frontend deployment:
+   ```
+   NEXT_PUBLIC_CHAT_API_URL=https://disasterhub-backend.onrender.com
+   ```
+4. Redeploy frontend
+5. Open the dashboard and click the chat button (bottom-left corner)
+
+**Note:** Without this variable, the chat button will show "Service Unavailable" error.
+
+### 2B. Start Development Server
 
 The dev server is already running on **http://localhost:3000**
 
@@ -241,6 +273,7 @@ vercel
 - Build command: `npm run build`
 - Start command: `npm run start`
 - Add the Firebase env vars plus `NEXT_PUBLIC_ADMIN_EMAIL` in Railway for the single admin account.
+- If you deploy the backend separately, set `NEXT_PUBLIC_CHAT_API_URL` to that Railway backend URL.
 
 ---
 

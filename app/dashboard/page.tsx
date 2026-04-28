@@ -105,7 +105,12 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('drs_chat_open') === 'true';
+    }
+    return false;
+  });
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [dataError, setDataError] = useState('');
   const [stats, setStats] = useState<DashboardStats>({
@@ -165,18 +170,10 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
-      return;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('drs_chat_open', String(chatOpen));
     }
-
-    if (!loading && user) {
-      const role = getRoleFromEmail(user.email);
-      if (role === 'user') {
-        router.replace('/user');
-      }
-    }
-  }, [loading, router, user]);
+  }, [chatOpen]);
 
   const loadDashboardData = useCallback(async () => {
     if (!user) return;
