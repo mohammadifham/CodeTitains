@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import AppFrame from "@/app/components/AppFrame";
+import SplashScreen from "@/app/components/SplashScreen";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-black">
         <AuthProvider>
+          <SplashScreen />
           <AppFrame>{children}</AppFrame>
         </AuthProvider>
       </body>

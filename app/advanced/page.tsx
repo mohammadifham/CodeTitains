@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/app/components/Navbar';
 import dynamic from 'next/dynamic';
+import { getRoleFromEmail } from '@/lib/roles';
 
 const LiveMap = dynamic(() => import('@/app/components/LiveMap'), {
   ssr: false,
@@ -140,12 +141,6 @@ function AdvancedPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  const getStoredRole = (uid: string): 'admin' | 'user' => {
-    if (typeof window === 'undefined') return 'user';
-    const role = localStorage.getItem(`disasterhub_user_role_${uid}`);
-    return role === 'admin' ? 'admin' : 'user';
-  };
-
   const [isLoading, setIsLoading] = useState(true);
   const [dataError, setDataError] = useState('');
   const [data, setData] = useState<AdvancedData>({
@@ -173,7 +168,7 @@ function AdvancedPage() {
     }
 
     if (!loading && user) {
-      const role = getStoredRole(user.uid);
+      const role = getRoleFromEmail(user.email);
       if (role === 'user') {
         router.replace('/user');
       }

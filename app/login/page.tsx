@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { getRoleFromEmail, getRoleRoute } from '@/lib/roles';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const getReadableAuthError = (error: unknown) => {
@@ -36,21 +37,11 @@ function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<'admin' | 'user'>('user');
 
   const redirectTarget = searchParams.get('redirect');
   const safeRedirect = redirectTarget?.startsWith('/') ? redirectTarget : null;
   const forceAuth = searchParams.get('forceAuth') === '1';
   const authIntentKey = 'disasterhub_auth_redirect';
-  const authIntentRoleKey = 'disasterhub_auth_role_intent';
-
-  const getStoredRole = (uid: string): 'admin' | 'user' => {
-    if (typeof window === 'undefined') return 'user';
-    const role = localStorage.getItem(`disasterhub_user_role_${uid}`);
-    return role === 'admin' ? 'admin' : 'user';
-  };
-
-  const getRoleRoute = (role: 'admin' | 'user') => (role === 'admin' ? '/dashboard' : '/user');
 
   const canSubmit = useMemo(() => {
     if (!email.trim() || !password.trim()) return false;
@@ -63,17 +54,7 @@ function LoginContent() {
   useEffect(() => {
     if (!loading && user) {
       const pendingRedirect = sessionStorage.getItem(authIntentKey);
-      const pendingRole = sessionStorage.getItem(authIntentRoleKey);
-      const effectiveRole: 'admin' | 'user' = pendingRole
-        ? pendingRole === 'admin'
-          ? 'admin'
-          : 'user'
-        : getStoredRole(user.uid);
-
-      if (pendingRole) {
-        localStorage.setItem(`disasterhub_user_role_${user.uid}`, effectiveRole);
-        sessionStorage.removeItem(authIntentRoleKey);
-      }
+      const effectiveRole = getRoleFromEmail(user.email);
 
       if (pendingRedirect) {
         sessionStorage.removeItem(authIntentKey);
@@ -94,13 +75,9 @@ function LoginContent() {
     }
   }, [forceAuth, loading, router, safeRedirect, user]);
 
-  const setAuthIntent = (role?: 'admin' | 'user') => {
+  const setAuthIntent = () => {
     if (safeRedirect) {
       sessionStorage.setItem(authIntentKey, safeRedirect);
-    }
-
-    if (role) {
-      sessionStorage.setItem(authIntentRoleKey, role);
     }
   };
 
@@ -117,8 +94,8 @@ function LoginContent() {
 
     try {
       if (mode === 'signup') {
-        setAuthIntent(selectedRole);
-        await signUpWithEmailPassword(email.trim(), password, fullName, selectedRole);
+        setAuthIntent();
+        await signUpWithEmailPassword(email.trim(), password, fullName);
       } else {
         setAuthIntent();
         await signInWithEmailPassword(email.trim(), password);
@@ -135,7 +112,7 @@ function LoginContent() {
     setSubmitting(true);
 
     try {
-      setAuthIntent(mode === 'signup' ? selectedRole : undefined);
+      setAuthIntent();
       await signInWithGoogle();
     } catch (err) {
       setError(getReadableAuthError(err));
@@ -205,42 +182,6 @@ function LoginContent() {
                     placeholder="Jane Doe"
                     required
                   />
-                </motion.div>
-              )}
-
-              {mode === 'signup' && (
-                <motion.div
-                  key="role"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-2.5 overflow-hidden"
-                >
-                  <label className="text-sm font-medium text-slate-300 ml-1">Account Type</label>
-                  <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-slate-950/50 p-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('user')}
-                      className={`rounded-xl px-4 py-3 text-sm font-semibold transition ${
-                        selectedRole === 'user'
-                          ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/40'
-                          : 'text-slate-300 hover:bg-white/5'
-                      }`}
-                    >
-                      User
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('admin')}
-                      className={`rounded-xl px-4 py-3 text-sm font-semibold transition ${
-                        selectedRole === 'admin'
-                          ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/40'
-                          : 'text-slate-300 hover:bg-white/5'
-                      }`}
-                    >
-                      Admin
-                    </button>
-                  </div>
                 </motion.div>
               )}
 

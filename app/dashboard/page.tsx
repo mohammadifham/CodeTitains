@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/app/components/Navbar';
 import Chatbot from '@/app/components/Chatbot';
 import dynamic from 'next/dynamic';
+import { getRoleFromEmail } from '@/lib/roles';
 
 const LiveMap = dynamic(() => import('@/app/components/LiveMap'), {
   ssr: false,
   loading: () => <div className="h-[400px] w-full animate-pulse bg-slate-900/50 rounded-2xl" />
 });
 import { useAuth } from '@/lib/auth-context';
-import { AlertTriangle, Bot, MapPinned, Package } from 'lucide-react';
+import { Bot, MapPinned, Package } from 'lucide-react';
 import styles from './dashboard.module.css';
 
 interface IncidentRecord {
@@ -104,12 +105,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  const getStoredRole = (uid: string): 'admin' | 'user' => {
-    if (typeof window === 'undefined') return 'user';
-    const role = localStorage.getItem(`disasterhub_user_role_${uid}`);
-    return role === 'admin' ? 'admin' : 'user';
-  };
-
   const [chatOpen, setChatOpen] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [dataError, setDataError] = useState('');
@@ -176,7 +171,7 @@ export default function DashboardPage() {
     }
 
     if (!loading && user) {
-      const role = getStoredRole(user.uid);
+      const role = getRoleFromEmail(user.email);
       if (role === 'user') {
         router.replace('/user');
       }

@@ -50,12 +50,6 @@ export default function HomePage() {
                 Open Dashboard
                 <ArrowRight size={16} />
               </Link>
-              <Link
-                href="/login"
-                className="inline-flex h-12 items-center rounded-full border border-cyan-400/35 bg-white/5 px-6 text-sm font-semibold uppercase tracking-[0.08em] text-cyan-100 transition hover:border-cyan-300/60 hover:bg-white/10"
-              >
-                Secure Sign In
-              </Link>
             </div>
           </div>
 
@@ -75,9 +69,6 @@ export default function HomePage() {
                   <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Avg Dispatch</p>
                   <p className="mt-2 text-2xl font-semibold text-slate-100">3.8m</p>
                 </div>
-              </div>
-              <div className="rounded-2xl border border-cyan-400/25 bg-cyan-500/10 p-4 text-sm text-cyan-100">
-                Priority channels are synchronized. Response continuity status: Stable.
               </div>
             </div>
           </div>

@@ -4,7 +4,6 @@ import { Activity, Clock3, ShieldCheck, ArrowUpRight } from 'lucide-react';
 const footerLinks = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Advanced Intelligence', href: '/advanced' },
-  { label: 'Login', href: '/login' },
 ];
 
 export default function SiteFooter() {

@@ -88,6 +88,7 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_ADMIN_EMAIL=the_one_admin_email@yourdomain.com
 NEXT_PUBLIC_NASA_API_KEY=your_nasa_api_key
 ```
 
@@ -235,6 +236,11 @@ vercel
 - **Railway**: Supports Node.js apps
 - **Render**: Full-stack deployment
 - **AWS Amplify**: AWS integration
+
+### Railway notes
+- Build command: `npm run build`
+- Start command: `npm run start`
+- Add the Firebase env vars plus `NEXT_PUBLIC_ADMIN_EMAIL` in Railway for the single admin account.
 
 ---
 

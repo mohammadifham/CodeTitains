@@ -13,6 +13,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { getRoleFromEmail } from '@/lib/roles';
 
 interface AuthContextValue {
   user: User | null;
@@ -23,7 +24,6 @@ interface AuthContextValue {
     email: string,
     password: string,
     fullName?: string,
-    role?: 'admin' | 'user',
   ) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -37,6 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
+
+      if (nextUser && typeof window !== 'undefined') {
+        localStorage.setItem(`disasterhub_user_role_${nextUser.uid}`, getRoleFromEmail(nextUser.email));
+      }
+
       setLoading(false);
     });
 
@@ -72,7 +77,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     fullName?: string,
-    role: 'admin' | 'user' = 'user',
   ) => {
     const credential = await createUserWithEmailAndPassword(auth, email, password);
 
@@ -81,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(`disasterhub_user_role_${credential.user.uid}`, role);
+      localStorage.setItem(`disasterhub_user_role_${credential.user.uid}`, getRoleFromEmail(credential.user.email));
     }
   };
 
